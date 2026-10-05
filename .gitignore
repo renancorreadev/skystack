@@ -22,6 +22,11 @@ vm-runtime/assets/
 # Packaged image bundles (release artifacts — hosted, not checked in)
 vm-runtime/dist/
 
+# Local environment (see .env.example for the documented variables)
+.env
+.env.*
+!.env.example
+
 # Editor
 .idea/
 .vscode/
