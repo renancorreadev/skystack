@@ -1,0 +1,27 @@
+# Go
+skystack/bin/
+*.test
+*.out
+
+# Compiled guest agent (build artifact — rebuilt from vm-runtime/agent sources)
+vm-runtime/agent/skyvm-agent
+
+# Swift / SPM
+vm-runtime/.build/
+vm-runtime/.swiftpm/
+app/.build/
+app/.swiftpm/
+app/dist/
+*.xcodeproj
+
+# macOS
+.DS_Store
+
+# Local runtime assets (kernels, rootfs images — not checked in)
+vm-runtime/assets/
+# Packaged image bundles (release artifacts — hosted, not checked in)
+vm-runtime/dist/
+
+# Editor
+.idea/
+.vscode/

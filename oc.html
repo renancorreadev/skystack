@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VFinance API — Rotas &amp; Exemplos</title>
+<style>
+  :root{
+    --bg:#0f1419; --panel:#161b22; --panel2:#1c2230; --border:#2a3340;
+    --txt:#e6edf3; --muted:#9aa7b4; --accent:#58a6ff; --code:#0d1117;
+    --get:#3fb950; --post:#d29922; --put:#a371f7; --del:#f85149; --auth:#f0883e;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.55 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+  a{color:var(--accent);text-decoration:none}
+  .wrap{display:flex;max-width:1280px;margin:0 auto}
+  nav{position:sticky;top:0;align-self:flex-start;width:280px;height:100vh;overflow:auto;padding:20px 14px;border-right:1px solid var(--border);background:var(--panel)}
+  nav h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:18px 8px 6px}
+  nav a{display:block;padding:5px 10px;border-radius:6px;color:var(--txt);font-size:13.5px}
+  nav a:hover{background:var(--panel2)}
+  nav .m{font:700 10px/1 ui-monospace,monospace;padding:2px 5px;border-radius:4px;margin-right:6px;color:#0d1117;vertical-align:middle}
+  main{flex:1;padding:28px 36px;min-width:0}
+  header.hero{background:linear-gradient(120deg,#1c2230,#161b22);border:1px solid var(--border);border-radius:14px;padding:26px 28px;margin-bottom:26px}
+  header.hero h1{margin:0 0 6px;font-size:26px}
+  header.hero p{margin:6px 0;color:var(--muted)}
+  .pill{display:inline-block;background:var(--panel2);border:1px solid var(--border);border-radius:999px;padding:3px 12px;font-size:12.5px;margin:3px 6px 3px 0;color:var(--txt)}
+  .pill b{color:var(--accent)}
+  .note{border-left:3px solid var(--accent);background:#10243b;padding:10px 14px;border-radius:6px;margin:14px 0;font-size:14px}
+  .note.warn{border-color:var(--post);background:#2a2310}
+  section.ep{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:18px 20px;margin:0 0 18px}
+  .ep h3{margin:0 0 4px;font-size:17px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .m{font:700 11px/1 ui-monospace,monospace;padding:4px 7px;border-radius:5px;color:#0d1117}
+  .GET{background:var(--get)} .POST{background:var(--post)} .PUT{background:var(--put)} .DELETE{background:var(--del)}
+  .path{font:600 15px/1.4 ui-monospace,monospace;color:#cdd9e5;word-break:break-all}
+  .badge-auth{background:var(--auth);color:#0d1117;font:700 10px/1 ui-monospace,monospace;padding:4px 7px;border-radius:5px}
+  .desc{color:var(--muted);margin:8px 0 12px}
+  table.params{border-collapse:collapse;width:100%;margin:8px 0 12px;font-size:13.5px}
+  table.params th,table.params td{border:1px solid var(--border);padding:6px 10px;text-align:left;vertical-align:top}
+  table.params th{background:var(--panel2);color:var(--muted);font-weight:600}
+  table.params code{color:#7ee787}
+  .lbl{font:700 11px/1 ui-monospace,monospace;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:14px 0 6px}
+  pre{background:var(--code);border:1px solid var(--border);border-radius:8px;padding:13px 15px;overflow:auto;margin:0;font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;color:#e6edf3}
+  pre.curl{color:#7ee787}
+  pre .k{color:#79c0ff} pre .s{color:#a5d6ff} pre .n{color:#f2cc60} pre .b{color:#ff7b72}
+  .grid{display:grid;grid-template-columns:1fr;gap:12px}
+  @media(min-width:1100px){.grid.two{grid-template-columns:1fr 1fr}}
+  footer{color:var(--muted);font-size:13px;margin:30px 0 10px;text-align:center}
+  code.inline{background:var(--panel2);border:1px solid var(--border);border-radius:5px;padding:1px 6px;font:13px ui-monospace,monospace;color:#7ee787}
+  .flow{counter-reset:step;list-style:none;padding:0;margin:0}
+  .flow li{position:relative;padding:8px 8px 8px 42px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;background:var(--panel2)}
+  .flow li::before{counter-increment:step;content:counter(step);position:absolute;left:10px;top:50%;transform:translateY(-50%);width:22px;height:22px;border-radius:50%;background:var(--accent);color:#0d1117;font:700 12px/22px ui-monospace,monospace;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav>
+  <h2>Geral</h2>
+  <a href="#topo">Visão geral</a>
+  <a href="#fluxo">Fluxo E2E</a>
+  <h2>01 · Health</h2>
+  <a href="#health"><span class="m GET">GET</span>/health</a>
+  <h2>02 · Auth</h2>
+  <a href="#auth-token"><span class="m POST">POST</span>/auth/token</a>
+  <a href="#auth-validate"><span class="m GET">GET</span>/auth/validate</a>
+  <h2>03 · Contracts</h2>
+  <a href="#c-register"><span class="m POST">POST</span>/contracts</a>
+  <a href="#c-get"><span class="m GET">GET</span>/contracts/:regConId</a>
+  <a href="#c-chassis"><span class="m GET">GET</span>/chassis/:chassis</a>
+  <a href="#c-hash"><span class="m GET">GET</span>/hash/:hash</a>
+  <a href="#c-token"><span class="m GET">GET</span>/token/:tokenId</a>
+  <a href="#c-active"><span class="m GET">GET</span>/contracts/active</a>
+  <a href="#c-stats"><span class="m GET">GET</span>/contracts/stats</a>
+  <a href="#c-murl"><span class="m GET">GET</span>/metadata-url/*</a>
+  <a href="#c-sync"><span class="m POST">POST</span>/contracts/sync</a>
+  <h2>04 · Blockchain</h2>
+  <a href="#b-version"><span class="m GET">GET</span>/version</a>
+  <a href="#b-total"><span class="m GET">GET</span>/contracts/total</a>
+  <a href="#b-registry"><span class="m GET">GET</span>/contract/registry</a>
+  <a href="#b-chassis"><span class="m GET">GET</span>/contract/chassis</a>
+  <a href="#b-hash"><span class="m GET">GET</span>/contract/hash</a>
+  <a href="#b-token"><span class="m GET">GET</span>/contract/token</a>
+  <a href="#b-active"><span class="m GET">GET</span>/contracts/active</a>
+  <a href="#b-exists"><span class="m GET">GET</span>/contract/exists</a>
+  <a href="#b-hashexists"><span class="m GET">GET</span>/hash/exists</a>
+  <a href="#b-brand"><span class="m GET">GET</span>/brand/:id</a>
+  <a href="#b-model"><span class="m GET">GET</span>/model/:id</a>
+  <a href="#b-murl"><span class="m GET">GET</span>/metadata-url/*</a>
+  <h2>05 · Metadata</h2>
+  <a href="#m-store"><span class="m POST">POST</span>/metadata/:hash</a>
+  <a href="#m-get"><span class="m GET">GET</span>/metadata/:hash</a>
+  <a href="#m-update"><span class="m PUT">PUT</span>/metadata/:hash</a>
+  <a href="#m-delete"><span class="m DELETE">DEL</span>/metadata/:hash</a>
+  <h2>06 · Write / Admin</h2>
+  <a href="#w-brand"><span class="m POST">POST</span>/admin/brand</a>
+  <a href="#w-model"><span class="m POST">POST</span>/admin/model</a>
+  <a href="#w-updhash"><span class="m PUT">PUT</span>/contract/metadata</a>
+  <a href="#w-status"><span class="m PUT">PUT</span>/contract/status</a>
+  <a href="#w-config"><span class="m PUT">PUT</span>/admin/server-config</a>
+</nav>
+
+<main>
+<header class="hero" id="topo">
+  <h1>🚗 VFinance API — Rotas &amp; Exemplos</h1>
+  <div>
+    <span class="pill">Base URL: <b>http://10.0.0.147</b></span>
+    <span class="pill">Direto na API: <b>http://10.0.0.147:3000</b></span>
+    <span class="pill">Contrato: <b>0x3e299c…3305</b></span>
+    <span class="pill">Chain: <b>Besu 1337</b></span>
+  </div>
+  <div class="note">
+    <b>Autenticação:</b> rotas marcadas com <span class="badge-auth">AUTH</span> exigem um JWT.
+    Gere em <code class="inline">POST /api/auth/token</code> e envie no header
+    <code class="inline">Authorization: Bearer &lt;token&gt;</code>.
+  </div>
+  <div class="note">
+    <b>CORS:</b> liberado para qualquer origem (<code class="inline">Access-Control-Allow-Origin: *</code>),
+    aplicado pela API . Preflight <code class="inline">OPTIONS</code> responde <code class="inline">204</code>.
+  </div>
+  <div class="note warn">
+    <b>Escritas on-chain</b> (registro, marca/modelo, status, hash, server-config) levam ~5–10s
+    (mineração no Besu) e são assinadas pela chave do servidor (= <code class="inline">apiServerAddress</code>).
+  </div>
+</header>
+
+<h2 id="fluxo">🔄 Fluxo E2E (ordem recomendada)</h2>
+<ol class="flow">
+  <li><b>Gera token</b> — <code class="inline">POST /api/auth/token</code> → guarda o JWT.</li>
+  <li><b>Registra contrato</b> — <code class="inline">POST /api/contracts/</code> → retorna <code class="inline">regConId</code>, <code class="inline">metadataHash</code>, <code class="inline">txHash</code>.</li>
+  <li><b>Consulta</b> — <code class="inline">GET /api/contracts/:regConId</code> → pega o <code class="inline">tokenId</code> e dados on/off-chain.</li>
+  <li><b>Leituras on-chain</b> — por registry / chassi / hash / token, exists, brand/model, stats, total.</li>
+  <li><b>Metadata off-chain</b> — store / get / update / delete.</li>
+  <li><b>Escritas/admin</b> — registrar marca/modelo, atualizar status/hash, server-config, sync.</li>
+</ol>
+
+<!-- ===================== 01 HEALTH ===================== -->
+<section class="ep" id="health">
+  <h3><span class="m GET">GET</span> <span class="path">/health</span></h3>
+  <p class="desc">Health check do serviço (exposto na rota dedicada <code class="inline">/health</code>).</p>
+  <div class="lbl">cURL</div>
+  <pre class="curl">curl http://10.0.0.147/health</pre>
+  <div class="lbl">200 OK</div>
+  <pre>{ <span class="k">"status"</span>: <span class="s">"ok"</span> }</pre>
+</section>
+
+<!-- ===================== 02 AUTH ===================== -->
+<section class="ep" id="auth-token">
+  <h3><span class="m POST">POST</span> <span class="path">/api/auth/token</span></h3>
+  <p class="desc">Gera um JWT (role <code class="inline">admin</code>, validade 24h). Não requer body.</p>
+  <div class="lbl">cURL</div>
+  <pre class="curl">curl -X POST http://10.0.0.147/api/auth/token</pre>
+  <div class="lbl">200 OK</div>
+  <pre>{
+  <span class="k">"success"</span>: <span class="n">true</span>,
+  <span class="k">"message"</span>: <span class="s">"Token gerado com sucesso"</span>,
+  <span class="k">"token"</span>: <span class="s">"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODI0OTI3NjYsInJvbGUiOiJhZG1pbiIsInVzZXJfaWQiOiJhZG1pbiJ9...."</span>
+}</pre>
+</section>
+
+<section class="ep" id="auth-validate">
+  <h3><span class="m GET">GET</span> <span class="path">/api/auth/validate</span> <span class="badge-auth">AUTH</span></h3>
+  <p class="desc">Valida o JWT do header e devolve as claims.</p>
+  <div class="lbl">cURL</div>
+  <pre class="curl">curl http://10.0.0.147/api/auth/validate \
+  -H "Authorization: Bearer $TOKEN"</pre>
+  <div class="lbl">200 OK</div>
+  <pre>{
+  <span class="k">"valid"</span>: <span class="n">true</span>, <span class="k">"success"</span>: <span class="n">true</span>, <span class="k">"message"</span>: <span class="s">"Token válido"</span>,
+  <span class="k">"user_id"</span>: <span class="s">"admin"</span>, <span class="k">"role"</span>: <span class="s">"admin"</span>, <span class="k">"exp"</span>: <span class="n">1782492766</span>
+}</pre>
+</section>
+
+<!-- ===================== 03 CONTRACTS ===================== -->
+<section class="ep" id="c-register">
+  <h3><span class="m POST">POST</span> <span class="path">/api/contracts/</span> <span class="badge-auth">AUTH</span></h3>
+  <p class="desc">Registra um contrato de financiamento (híbrido): grava dados primários on-chain (Besu) + metadados completos off-chain, ancorados por hash. <b>Obrigatórios:</b> <code class="inline">regConId</code>, <code class="inline">numeroContrato</code>, <code class="inline">dataContrato</code> e, dentro de <code class="inline">vehicleData</code>: <code class="inline">chassiVeiculo</code>, <code class="inline">placaVeiculo</code>, <code class="inline">marcaVeiculo</code>, <code class="inline">modeloVeiculo</code>, <code class="inline">valorTotalContrato</code> (&gt; 0). Os demais campos vão para o metadata off-chain.</p>
+  <div class="lbl">Request body</div>
+  <pre>{
+  <span class="k">"regConId"</span>: <span class="s">"DOC-1782406308"</span>,
+  <span class="k">"numeroContrato"</span>: <span class="s">"87686"</span>,
+  <span class="k">"dataContrato"</span>: <span class="s">"2025-09-11"</span>,
+  <span class="k">"vehicleData"</span>: {
+    <span class="k">"regConId"</span>: <span class="s">"DOC-1782406308"</span>,
+    <span class="k">"numeroContrato"</span>: <span class="s">"87686"</span>,
+    <span class="k">"dataContrato"</span>: <span class="s">"2025-09-11"</span>,
+    <span class="k">"nomeAgenteFinanceiro"</span>: <span class="s">"CREDORA INTERNA"</span>,
+    <span class="k">"cnpjAgenteFinanceiro"</span>: <span class="s">"11204397000150"</span>,
+    <span class="k">"cpfCnpjProprietario"</span>: <span class="s">"64687376487"</span>,
+    <span class="k">"nomeProprietario"</span>: <span class="s">"ANDRE SANTOS"</span>,
+    <span class="k">"chassiVeiculo"</span>: <span class="s">"983279794327897"</span>,
+    <span class="k">"placaVeiculo"</span>: <span class="s">"PL87686"</span>,
+    <span class="k">"marcaVeiculo"</span>: <span class="s">"FIAT"</span>,
+    <span class="k">"modeloVeiculo"</span>: <span class="s">"ARGO"</span>,
+    <span class="k">"modelName"</span>: <span class="s">"ARGO"</span>,
+    <span class="k">"tipoRestricacaoContrato"</span>: <span class="s">"ALIENACAO FIDUCIARIA"</span>,
+    <span class="k">"valorTotalContrato"</span>: <span class="s">"30000.00"</span>,
+    <span class="k">"quantidadeParcelasContrato"</span>: <span class="s">"36"</span>,
+    <span class="k">"taxaJurosMesContrato"</span>: <span class="s">"1.00"</span>,
+    <span class="k">"veiculoZeroKm"</span>: <span class="n">true</span>,
+    <span class="k">"anoFabricacaoVeiculo"</span>: <span class="s">"2025"</span>,
+    <span class="k">"anoModeloVeiculo"</span>: <span class="s">"2025"</span>
+  }
+}</pre>
+  <div class="lbl">cURL</div>
+  <pre class="curl">curl -X POST http://10.0.0.147/api/contracts/ \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d @contrato.json</pre>
+  <div class="lbl">201 Created</div>
+  <pre>{
+  <span class="k">"success"</span>: <span class="n">true</span>,
+  <span class="k">"message"</span>: <span class="s">"Contrato registrado com sucesso"</span>,
+  <span class="k">"regConId"</span>: <span class="s">"DOC-1782406308"</span>,
+  <span class="k">"metadataHash"</span>: <span class="s">"854d3c0bc68726bb60f799310320787696303d4c87c0fbe7ee96f3fc98cff59a"</span>,
+  <span class="k">"txHash"</span>: <span class="s">"0x4cbd7fcc2eb6d0a8fbb7a04b3fbf35f724892e2899f3d6567c531a3b993ecb33"</span>
+}</pre>
+  <div class="note warn">Erros: <code class="inline">400</code> campos faltando/inválidos · <code class="inline">InvalidInput</code> se <code class="inline">placaVeiculo</code>/<code class="inline">marcaVeiculo</code>/<code class="inline">modeloVeiculo</code> vazios · contrato/chassi duplicado.</div>
+</section>
+
+<section class="ep" id="c-get">
+  <h3><span class="m GET">GET</span> <span class="path">/api/contracts/:regConId</span></h3>
+  <p class="desc">Contrato híbrido completo: <code class="inline">data.onChain</code> (Besu) + <code class="inline">data.offChain</code> (todos os campos do contrato).</p>
+  <div class="lbl">cURL</div>
+  <pre class="curl">curl http://10.0.0.147/api/contracts/DOC-1782406308</pre>
+  <div class="lbl">200 OK <span style="color:var(--muted)">(offChain truncado)</span></div>
+  <pre>{
+  <span class="k">"success"</span>: <span class="n">true</span>,
+  <span class="k">"data"</span>: {
+    <span class="k">"onChain"</span>: {
+      <span class="k">"tokenId"</span>: <span class="s">"6"</span>,
+      <span class="k">"regConId"</span>: <span class="s">"DOC-1782406308"</span>,
+      <span class="k">"numeroContrato"</span>: <span class="s">"406308"</span>,
+      <span class="k">"dataContrato"</span>: <span class="s">"1757548800"</span>,
+      <span class="k">"metadataHash"</span>: <span class="s">"854d3c0b…cff59a"</span>,
+      <span class="k">"timestamp"</span>: <span class="n">1782406309</span>,
+      <span class="k">"registeredBy"</span>: <span class="s">"0xF08A60a634cbD8922B6e9c7aCFa391b402b80600"</span>,
+      <span class="k">"active"</span>: <span class="n">true</span>
+    },
+    <span class="k">"offChain"</span>: {
+      <span class="k">"regConId"</span>: <span class="s">"DOC-1782406308"</span>, <span class="k">"chassiVeiculo"</span>: <span class="s">"983279794327897"</span>,
+      <span class="k">"placaVeiculo"</span>: <span class="s">"PL87686"</span>, <span class="k">"marcaVeiculo"</span>: <span class="s">"FIAT"</span>, <span class="k">"modeloVeiculo"</span>: <span class="s">"ARGO"</span>,
+      <span class="k">"nomeProprietario"</span>: <span class="s">"ANDRE SANTOS"</span>, <span class="k">"cpfCnpjProprietario"</span>: <span class="s">"64687376487"</span>,
+      <span class="k">"nomeAgenteFinanceiro"</span>: <span class="s">"CREDORA INTERNA"</span>, <span class="k">"valorTotalContrato"</span>: <span class="s">"30000.00"</span>,
+      <span class="k">"tipoRestricacaoContrato"</span>: <span class="s">"ALIENACAO FIDUCIARIA"</span>, <span class="k">"veiculoZeroKm"</span>: <span class="n">true</span>
+      <span style="color:var(--muted)">/* + ~40 campos de contrato (taxas, datas, endereços, etc.) */</span>
+    }
+  }
+}</pre>
+</section>
+
+<section class="ep" id="c-chassis">
+  <h3><span class="m GET">GET</span> <span class="path">/api/contracts/chassis/:chassis</span></h3>
+  <p class="desc">Mesmo payload híbrido, buscando pelo chassi.</p>
+  <div class="lbl">cURL</div>
+  <pre class="curl">curl http://10.0.0.147/api/contracts/chassis/983279794327897</pre>
+</section>
+
+<section class="ep" id="c-hash">
+  <h3><span class="m GET">GET</span> <span class="path">/api/contracts/hash/:hash</span></h3>
+  <p class="desc">Busca o contrato híbrido pelo <code class="inline">metadataHash</code>.</p>
+  <div class="lbl">cURL</div>
+  <pre class="curl">curl http://10.0.0.147/api/contracts/hash/854d3c0bc68726bb60f799310320787696303d4c87c0fbe7ee96f3fc98cff59a</pre>
+</section>
+
+<section class="ep" id="c-token">
+  <h3><span class="m GET">GET</span> <span class="path">/api/contracts/token/:tokenId</span></h3>
+  <p class="desc">Busca o contrato híbrido pelo <code class="inline">tokenId</code> (numérico, on-chain).</p>
+  <div class="lbl">cURL</div>
+  <pre class="curl">curl http://10.0.0.147/api/contracts/token/6</pre>
+</section>
+
+<section class="ep" id="c-active">
+  <h3><span class="m GET">GET</span> <span class="path">/api/contracts/active?offset=0&amp;limit=10</span></h3>
+  <p class="desc">Lista paginada de contratos ativos (resumo). <code class="inline">limit</code> máx. 100.</p>
+  <div class="lbl">cURL</div>
+  <pre class="curl">curl "http://10.0.0.147/api/contracts/active?offset=0&limit=10"</pre>
+  <div class="lbl">200 OK</div>
+  <pre>{
+  <span class="k">"success"</span>: <span class="n">true</span>,
+  <span class="k">"data"</span>: {
+    <span class="k">"contracts"</span>: [
+      { <span class="k">"tokenId"</span>: <span class="s">"6"</span>, <span class="k">"regConId"</span>: <span class="s">"0x4778615d…149a0f"</span>, <span class="k">"numeroContrato"</span>: <span class="s">"406308"</span>,
+        <span class="k">"metadataHash"</span>: <span class="s">"854d3c0b…cff59a"</span>, <span class="k">"totalValue"</span>: <span class="s">"3000000"</span>,
+        <span class="k">"brandName"</span>: <span class="s">"FIAT"</span>, <span class="k">"modelName"</span>: <span class="s">"ARGO"</span>, <span class="k">"active"</span>: <span class="n">true</span>, <span class="k">"timestamp"</span>: <span class="n">1782406309</span> }
+      <span style="color:var(--muted)">/* … */</span>
+    ],
+    <span class="k">"total"</span>: <span class="n">6</span>, <span class="k">"offset"</span>: <span class="n">0</span>, <span class="k">"limit"</span>: <span class="n">10</span>
+  }
+}</pre>
+</section>
+
+<section class="ep" id="c-stats">
+  <h3><span class="m GET">GET</span> <span class="path">/api/contracts/stats</span></h3>
+  <p class="desc">Estatísticas agregadas (on-chain).</p>
+  <div class="lbl">cURL</div>
+  <pre class="curl">curl http://10.0.0.147/api/contracts/stats</pre>
+  <div class="lbl">200 OK</div>
+  <pre>{ <span class="k">"success"</span>: <span class="n">true</span>, <span class="k">"data"</span>: { <span class="k">"totalContracts"</span>: <span class="n">6</span>, <span class="k">"activeContracts"</span>: <span class="n">6</span>, <span class="k">"contractVersion"</span>: <span class="s">"2.0.0"</span> } }</pre>
+</section>
+
+<section class="ep" id="c-murl">
+  <h3><span class="m GET">GET</span> <span class="path">/api/contracts/metadata-url/:hash</span> &nbsp;·&nbsp; <span class="path">/api/contracts/metadata-url/registry/:registryId</span></h3>
+  <p class="desc">Resolve a URL pública dos metadados (pelo hash ou pelo regConId).</p>
+  <div class="lbl">cURL</div>
+  <pre class="curl">curl http://10.0.0.147/api/contracts/metadata-url/registry/DOC-1782406308</pre>
+  <div class="lbl">200 OK</div>
+  <pre>{ <span class="k">"success"</span>: <span class="n">true</span>, <span class="k">"url"</span>: <span class="s">"http://localhost:8080/api/metadata/0x854d3c0b…cff59a"</span> }</pre>
+</section>
+
+<section class="ep" id="c-sync">
+  <h3><span class="m POST">POST</span> <span class="path">/api/contracts/sync</span> <span class="badge-auth">AUTH</span></h3>
+  <p class="desc">Sincroniza dados on-chain → banco local (paginando 100/vez).</p>
+  <div class="lbl">cURL</div>
+  <pre class="curl">curl -X POST http://10.0.0.147/api/contracts/sync -H "Authorization: Bearer $TOKEN"</pre>
+  <div class="lbl">200 OK</div>
+  <pre>{ <span class="k">"success"</span>: <span class="n">true</span>, <span class="k">"message"</span>: <span class="s">"Sincronização concluída com sucesso"</span> }</pre>
+</section>
+
+<!-- ===================== 04 BLOCKCHAIN ===================== -->
+<section class="ep" id="b-version">
+  <h3><span class="m GET">GET</span> <span class="path">/api/blockchain/version</span></h3>
+  <p class="desc">Versão do contrato on-chain.</p>
+  <div class="lbl">cURL</div>
+  <pre class="curl">curl http://10.0.0.147/api/blockchain/version</pre>
+  <div class="lbl">200 OK</div>
+  <pre>{ <span class="k">"success"</span>: <span class="n">true</span>, <span class="k">"data"</span>: { <span class="k">"version"</span>: <span class="s">"2.0.0"</span> } }</pre>
+</section>
+
+<section class="ep" id="b-total">
+  <h3><span class="m GET">GET</span> <span class="path">/api/blockchain/contracts/total</span></h3>
+  <div class="lbl">cURL</div>
+  <pre class="curl">curl http://10.0.0.147/api/blockchain/contracts/total</pre>
+  <div class="lbl">200 OK</div>
+  <pre>{ <span class="k">"success"</span>: <span class="n">true</span>, <span class="k">"data"</span>: { <span class="k">"totalSupply"</span>: <span class="s">"6"</span> } }</pre>
+</section>
+
+<section class="ep" id="b-registry">
+  <h3><span class="m GET">GET</span> <span class="path">/api/blockchain/contract/registry/:registryId</span></h3>
+  <p class="desc">Dados <b>puramente on-chain</b> (ContractRecord + VehicleCore). Note os campos em forma raw: <code class="inline">registryId</code>/<code class="inline">chassis</code> como hash/bytes32, <code class="inline">totalValue</code> sem casas decimais, <code class="inline">brandId</code>/<code class="inline">modelId</code> numéricos.</p>
+  <div class="lbl">cURL</div>
+  <pre class="curl">curl http://10.0.0.147/api/blockchain/contract/registry/DOC-1782406308</pre>
+  <div class="lbl">200 OK</div>
+  <pre>{
+  <span class="k">"success"</span>: <span class="n">true</span>,
+  <span class="k">"data"</span>: {
+    <span class="k">"tokenId"</span>: <span class="s">"0"</span>,
+    <span class="k">"contractRecord"</span>: {
+      <span class="k">"registryId"</span>: <span class="s">"0x4778615d5c7f20e4851988a18f84cdf3369e3a8694622e941f4ecf1014149a0f"</span>,
+      <span class="k">"contractNumber"</span>: <span class="s">"406308"</span>, <span class="k">"contractDate"</span>: <span class="s">"1757548800"</span>,
+      <span class="k">"metadataHash"</span>: <span class="s">"854d3c0b…cff59a"</span>, <span class="k">"timestamp"</span>: <span class="n">1782406309</span>,
+      <span class="k">"registeredBy"</span>: <span class="s">"0xF08A60a634cbD8922B6e9c7aCFa391b402b80600"</span>, <span class="k">"active"</span>: <span class="n">true</span>
+    },
+    <span class="k">"vehicleCore"</span>: {
+      <span class="k">"chassis"</span>: <span class="s">"983279794327897"</span>, <span class="k">"licensePlate"</span>: <span class="s">"PL87686"</span>,
+      <span class="k">"totalValue"</span>: <span class="s">"3000000"</span>, <span class="k">"brandId"</span>: <span class="n">4</span>, <span class="k">"modelId"</span>: <span class="n">1</span>
+    }
+  }
+}</pre>
+</section>
+
+<section class="ep" id="b-chassis">
+  <h3><span class="m GET">GET</span> <span class="path">/api/blockchain/contract/chassis/:chassis</span></h3>
+  <p class="desc">Mesma estrutura on-chain, buscando pelo chassi.</p>
+  <div class="lbl">cURL</div>
+  <pre class="curl">curl http://10.0.0.147/api/blockchain/contract/chassis/983279794327897</pre>
+</section>
+
+<section class="ep" id="b-hash">
+  <h3><span class="m GET">GET</span> <span class="path">/api/blockchain/contract/hash/:hash</span></h3>
+  <div class="lbl">cURL</div>
+  <pre class="curl">curl http://10.0.0.147/api/blockchain/contract/hash/854d3c0b…cff59a</pre>
+</section>
+
+<section class="ep" id="b-token">
+  <h3><span class="m GET">GET</span> <span class="path">/api/blockchain/contract/token/:tokenId</span></h3>
+  <div class="lbl">cURL</div>
+  <pre class="curl">curl http://10.0.0.147/api/blockchain/contract/token/6</pre>
+</section>
+
+<section class="ep" id="b-active">
+  <h3><span class="m GET">GET</span> <span class="path">/api/blockchain/contracts/active?offset=0&amp;limit=10</span></h3>
+  <p class="desc">Lista de tokenIds ativos direto da chain (<code class="inline">limit</code> máx. 100).</p>
+  <div class="lbl">cURL</div>
+  <pre class="curl">curl "http://10.0.0.147/api/blockchain/contracts/active?offset=0&limit=10"</pre>
+</section>
+
+<section class="ep" id="b-exists">
+  <h3><span class="m GET">GET</span> <span class="path">/api/blockchain/contract/exists/:registryId</span></h3>
+  <div class="lbl">cURL</div>
+  <pre class="curl">curl http://10.0.0.147/api/blockchain/contract/exists/DOC-1782406308</pre>
+  <div class="lbl">200 OK</div>
+  <pre>{ <span class="k">"success"</span>: <span class="n">true</span>, <span class="k">"data"</span>: { <span class="k">"registryId"</span>: <span class="s">"DOC-1782406308"</span>, <span class="k">"exists"</span>: <span class="n">true</span> } }</pre>
+</section>
+
+<section class="ep" id="b-hashexists">
+  <h3><span class="m GET">GET</span> <span class="path">/api/blockchain/hash/exists/:hash</span></h3>
+  <div class="lbl">cURL</div>
+  <pre class="curl">curl http://10.0.0.147/api/blockchain/hash/exists/854d3c0b…cff59a</pre>
+  <div class="lbl">200 OK</div>
+  <pre>{ <span class="k">"success"</span>: <span class="n">true</span>, <span class="k">"data"</span>: { <span class="k">"exists"</span>: <span class="n">true</span> } }</pre>
+</section>
+
+<section class="ep" id="b-brand">
+  <h3><span class="m GET">GET</span> <span class="path">/api/blockchain/brand/:brandId</span></h3>
+  <div class="lbl">cURL</div>
+  <pre class="curl">curl http://10.0.0.147/api/blockchain/brand/1</pre>
+  <div class="lbl">200 OK</div>
+  <pre>{ <span class="k">"success"</span>: <span class="n">true</span>, <span class="k">"data"</span>: { <span class="k">"brandId"</span>: <span class="n">1</span>, <span class="k">"brandName"</span>: <span class="s">"TOYOTA"</span> } }</pre>
+</section>
+
+<section class="ep" id="b-model">
+  <h3><span class="m GET">GET</span> <span class="path">/api/blockchain/model/:modelId</span></h3>
+  <div class="lbl">cURL</div>
+  <pre class="curl">curl http://10.0.0.147/api/blockchain/model/1</pre>
+  <div class="lbl">200 OK</div>
+  <pre>{ <span class="k">"success"</span>: <span class="n">true</span>, <span class="k">"data"</span>: { <span class="k">"modelId"</span>: <span class="n">1</span>, <span class="k">"modelName"</span>: <span class="s">"ARGO"</span> } }</pre>
+</section>
+
+<section class="ep" id="b-murl">
+  <h3><span class="m GET">GET</span> <span class="path">/api/blockchain/metadata-url/:hash</span> &nbsp;·&nbsp; <span class="path">/api/blockchain/metadata-url/registry/:registryId</span></h3>
+  <p class="desc">Resolve a URL de metadados direto da chain (<code class="inline">tokenURI</code>).</p>
+  <div class="lbl">cURL</div>
+  <pre class="curl">curl http://10.0.0.147/api/blockchain/metadata-url/registry/DOC-1782406308</pre>
+</section>
+
+<!-- ===================== 05 METADATA ===================== -->
+<section class="ep" id="m-store">
+  <h3><span class="m POST">POST</span> <span class="path">/api/metadata/:hash</span> <span class="badge-auth">AUTH</span></h3>
+  <p class="desc">Armazena/atualiza os metadados (objeto <code class="inline">VehicleData</code>) sob um hash.</p>
+  <div class="lbl">Request body</div>
+  <pre>{
+  <span class="k">"regConId"</span>: <span class="s">"DOC-1782406308"</span>, <span class="k">"chassiVeiculo"</span>: <span class="s">"983279794327897"</span>,
+  <span class="k">"marcaVeiculo"</span>: <span class="s">"FIAT"</span>, <span class="k">"modeloVeiculo"</span>: <span class="s">"ARGO"</span>,
+  <span class="k">"valorTotalContrato"</span>: <span class="s">"30000.00"</span>, <span class="k">"veiculoZeroKm"</span>: <span class="n">true</span>
+}</pre>
+  <div class="lbl">cURL</div>
+  <pre class="curl">curl -X POST http://10.0.0.147/api/metadata/0xabc123 \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d @metadata.json</pre>
+  <div class="lbl">201 Created</div>
+  <pre>{ <span class="k">"success"</span>: <span class="n">true</span>, <span class="k">"message"</span>: <span class="s">"Metadados armazenados com sucesso"</span> }</pre>
+</section>
+
+<section class="ep" id="m-get">
+  <h3><span class="m GET">GET</span> <span class="path">/api/metadata/:hash</span></h3>
+  <p class="desc">Recupera os metadados armazenados sob o hash.</p>
+  <div class="lbl">cURL</div>
+  <pre class="curl">curl http://10.0.0.147/api/metadata/0xabc123</pre>
+  <div class="lbl">200 OK <span style="color:var(--muted)">(campos vazios omitidos)</span></div>
+  <pre>{ <span class="k">"success"</span>: <span class="n">true</span>, <span class="k">"data"</span>: { <span class="k">"regConId"</span>: <span class="s">"DOC-1782406308"</span>, <span class="k">"chassiVeiculo"</span>: <span class="s">"983279794327897"</span>, <span class="k">"marcaVeiculo"</span>: <span class="s">"FIAT"</span>, <span class="k">"modeloVeiculo"</span>: <span class="s">"ARGO"</span>, <span class="k">"valorTotalContrato"</span>: <span class="s">"30000.00"</span>, <span class="k">"veiculoZeroKm"</span>: <span class="n">true</span> } }</pre>
+</section>
+
+<section class="ep" id="m-update">
+  <h3><span class="m PUT">PUT</span> <span class="path">/api/metadata/:hash</span> <span class="badge-auth">AUTH</span></h3>
+  <p class="desc">Atualiza os metadados sob o hash (mesmo corpo <code class="inline">VehicleData</code>).</p>
+  <div class="lbl">cURL</div>
+  <pre class="curl">curl -X PUT http://10.0.0.147/api/metadata/0xabc123 \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"marcaVeiculo":"FIAT","modeloVeiculo":"ARGO HGT"}'</pre>
+  <div class="lbl">200 OK</div>
+  <pre>{ <span class="k">"success"</span>: <span class="n">true</span> }</pre>
+</section>
+
+<section class="ep" id="m-delete">
+  <h3><span class="m DELETE">DELETE</span> <span class="path">/api/metadata/:hash</span> <span class="badge-auth">AUTH</span></h3>
+  <div class="lbl">cURL</div>
+  <pre class="curl">curl -X DELETE http://10.0.0.147/api/metadata/0xabc123 -H "Authorization: Bearer $TOKEN"</pre>
+  <div class="lbl">200 OK</div>
+  <pre>{ <span class="k">"success"</span>: <span class="n">true</span> }</pre>
+</section>
+
+<!-- ===================== 06 WRITE / ADMIN ===================== -->
+<section class="ep" id="w-brand">
+  <h3><span class="m POST">POST</span> <span class="path">/api/blockchain/admin/brand</span> <span class="badge-auth">AUTH</span></h3>
+  <p class="desc">Registra uma marca on-chain (apenas owner). ~6s.</p>
+  <div class="lbl">Request body &amp; cURL</div>
+  <pre class="curl">curl -X POST http://10.0.0.147/api/blockchain/admin/brand \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"brandName":"VOLKSWAGEN"}'</pre>
+  <div class="lbl">200 OK</div>
+  <pre>{ <span class="k">"success"</span>: <span class="n">true</span>, <span class="k">"message"</span>: <span class="s">"Brand registered successfully"</span>, <span class="k">"txHash"</span>: <span class="s">"0xcc0b5b25…fe9b24"</span> }</pre>
+</section>
+
+<section class="ep" id="w-model">
+  <h3><span class="m POST">POST</span> <span class="path">/api/blockchain/admin/model</span> <span class="badge-auth">AUTH</span></h3>
+  <p class="desc">Registra um modelo on-chain. <b>Exige</b> <code class="inline">brandId</code> (uint) <b>e</b> <code class="inline">modelName</code>.</p>
+  <div class="lbl">Request body &amp; cURL</div>
+  <pre class="curl">curl -X POST http://10.0.0.147/api/blockchain/admin/model \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"brandId":1,"modelName":"COROLLA"}'</pre>
+  <div class="lbl">200 OK</div>
+  <pre>{ <span class="k">"success"</span>: <span class="n">true</span>, <span class="k">"message"</span>: <span class="s">"Model registered successfully"</span>, <span class="k">"txHash"</span>: <span class="s">"0x80c4bd20…f40579"</span> }</pre>
+</section>
+
+<section class="ep" id="w-updhash">
+  <h3><span class="m PUT">PUT</span> <span class="path">/api/blockchain/contract/metadata</span> <span class="badge-auth">AUTH</span></h3>
+  <p class="desc">Atualiza o <code class="inline">metadataHash</code> de um token on-chain. O hash precisa ser único (bytes32, <code class="inline">0x</code> + 64 hex).</p>
+  <div class="lbl">Request body &amp; cURL</div>
+  <pre class="curl">curl -X PUT http://10.0.0.147/api/blockchain/contract/metadata \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"tokenId":"6","newMetadataHash":"0x1234…cdef"}'</pre>
+  <div class="lbl">200 OK</div>
+  <pre>{ <span class="k">"success"</span>: <span class="n">true</span>, <span class="k">"message"</span>: <span class="s">"Hash de metadados atualizado com sucesso"</span>, <span class="k">"tokenId"</span>: <span class="s">"6"</span>, <span class="k">"txHash"</span>: <span class="s">"0xa552135e…04c6b"</span> }</pre>
+</section>
+
+<section class="ep" id="w-status">
+  <h3><span class="m PUT">PUT</span> <span class="path">/api/blockchain/contract/status</span> <span class="badge-auth">AUTH</span></h3>
+  <p class="desc">Ativa/desativa um contrato on-chain.</p>
+  <div class="lbl">Request body &amp; cURL</div>
+  <pre class="curl">curl -X PUT http://10.0.0.147/api/blockchain/contract/status \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"tokenId":"6","active":true}'</pre>
+  <div class="lbl">200 OK</div>
+  <pre>{ <span class="k">"success"</span>: <span class="n">true</span>, <span class="k">"message"</span>: <span class="s">"Status do contrato atualizado para ativo"</span>, <span class="k">"tokenId"</span>: <span class="s">"6"</span>, <span class="k">"active"</span>: <span class="n">true</span>, <span class="k">"txHash"</span>: <span class="s">"0x6e0ba36a…1fd2b9f4"</span> }</pre>
+</section>
+
+<section class="ep" id="w-config">
+  <h3><span class="m PUT">PUT</span> <span class="path">/api/blockchain/admin/server-config</span> <span class="badge-auth">AUTH</span></h3>
+  <p class="desc">Atualiza a base URL de metadados e o endereço do servidor (apiServer) on-chain. <b>Campos:</b> <code class="inline">serverAddress</code>, <code class="inline">metadataBaseUrl</code>.</p>
+  <div class="note warn">⚠️ Trocar <code class="inline">serverAddress</code> para um endereço cuja chave a API não controla <b>bloqueia</b> futuras escritas. Mantenha <code class="inline">0xF08A60a634cbD8922B6e9c7aCFa391b402b80600</code> (chave atual do servidor).</div>
+  <div class="lbl">Request body &amp; cURL</div>
+  <pre class="curl">curl -X PUT http://10.0.0.147/api/blockchain/admin/server-config \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"serverAddress":"0xF08A60a634cbD8922B6e9c7aCFa391b402b80600","metadataBaseUrl":"http://localhost:8080"}'</pre>
+  <div class="lbl">200 OK</div>
+  <pre>{ <span class="k">"success"</span>: <span class="n">true</span>, <span class="k">"message"</span>: <span class="s">"Server config updated successfully"</span>, <span class="k">"txHash"</span>: <span class="s">"0x6e7c3a01…b8a1ea"</span> }</pre>
+</section>
+
+<footer>
+  VFinance API · gerado a partir dos fluxos de <code class="inline">api/e2e</code> · exemplos reais capturados  (http://10.0.0.147).<br>
+  Swagger interativo: <a href="http://10.0.0.147/swagger/index.html">http://10.0.0.147/swagger/index.html</a>
+</footer>
+</main>
+</div>
+</body>
+</html>
